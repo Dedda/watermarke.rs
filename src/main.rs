@@ -5,11 +5,13 @@ use image::{DynamicImage, GenericImageView, GenericImage, Pixel};
 fn main() {
     let watermark_bytes = include_bytes!("watermark.png");
     let watermark = image::load_from_memory(watermark_bytes).unwrap();
-    println!("Watermark original size: {} x {}", watermark.width(), watermark.height());
     let args = std::env::args();
     let mut args = args.into_iter();
     args.next();
-    args.map(|filename| (filename.clone(), image::open(&filename).unwrap()))
+    args.map(|filename| {
+        println!("Processing file `{}`...", filename);
+        (filename.clone(), image::open(&filename).unwrap())
+    })
         .map(|(filename, pic)| (format!("watermarked_{}", filename), watermark_pic(pic, &watermark)))
         .for_each(|(filename, pic)| pic.save(filename).unwrap());
 }
@@ -40,7 +42,6 @@ fn watermark_pic(mut pic: DynamicImage, watermark: &DynamicImage) -> DynamicImag
             let mut pic_pixel = pic.get_pixel(x + offset_x, pic_y);
             pic_pixel.blend(&watermark_pixel);
             pic.put_pixel(x + offset_x, pic_y, pic_pixel);
-
         }
     }
     pic
